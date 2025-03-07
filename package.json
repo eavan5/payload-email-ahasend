@@ -1,9 +1,17 @@
 {
   "name": "payload-email-ahasend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Payload Ahasend Email Adapter",
   "license": "MIT",
   "type": "module",
+  "keywords": [
+    "payload",
+    "payload-plugin",
+    "email",
+    "ahasend",
+    "payload-email-adapter"
+  ],
+  "homepage": "https://github.com/eavan5/payload-email-ahasend",
   "author": "Eavan <admin@eavan.dev> (https://eavan.dev)",
   "exports": {
     ".": {
@@ -68,7 +76,7 @@
     "typescript": "5.7.3"
   },
   "peerDependencies": {
-    "payload": "^^3.25.0"
+    "payload": "^3.25.0"
   },
   "engines": {
     "node": "^18.20.2 || >=20.9.0",
