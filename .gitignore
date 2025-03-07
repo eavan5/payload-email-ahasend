@@ -1,0 +1,14 @@
+.env
+.tsconfig.tsbuildinfo
+.DS_Store
+dist
+dev/.env
+dev/.next
+dev/.turbo
+dev/.vscode
+dev/node_modules
+dev/pnpm-lock.yaml
+
+node_modules
+
+pnpm-lock.yaml
