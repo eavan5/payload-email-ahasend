@@ -37,7 +37,7 @@ type AhasendResponse = AhasendError | AhasendSuccess;
  * @interface AhasendError
  * @property {string} status - Error status message
  */
-interface AhasendError {
+export interface AhasendError {
   status: string;
 }
 
@@ -49,7 +49,7 @@ interface AhasendError {
  * @property {string[]} failed_recipients - List of recipients that failed
  * @property {number} success_count - Number of successful deliveries
  */
-interface AhasendSuccess {
+export interface AhasendSuccess {
   errors: string[];
   fail_count: number;
   failed_recipients: string[];
