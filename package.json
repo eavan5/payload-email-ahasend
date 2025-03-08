@@ -11,7 +11,7 @@
     "ahasend",
     "payload-email-adapter"
   ],
-  "homepage": "https://github.com/eavan5/payload-email-ahasend",
+  "repository": "https://github.com/eavan5/payload-email-ahasend",
   "author": "Eavan <admin@eavan.dev> (https://eavan.dev)",
   "exports": {
     ".": {
