@@ -1,6 +1,6 @@
-import type { EmailAdapter, SendEmailOptions } from "payload";
+import type { EmailAdapter, SendEmailOptions } from 'payload'
 
-import { APIError } from "payload";
+import { APIError } from 'payload'
 
 /**
  * Configuration options for the Ahasend email adapter
@@ -10,9 +10,9 @@ import { APIError } from "payload";
  * @property {string} defaultFromName - Default sender name
  */
 export interface AhasendAdapterConfig {
-  apiKey: string;
-  defaultFromAddress: string;
-  defaultFromName: string;
+  apiKey: string
+  defaultFromAddress: string
+  defaultFromName: string
 }
 
 /**
@@ -22,15 +22,15 @@ export interface AhasendAdapterConfig {
  * @property {string} [name] - Optional name of the recipient
  */
 interface EmailRecipient {
-  email: string;
-  name?: string;
+  email: string
+  name?: string
 }
 
 /**
  * Response types from Ahasend API
  * @typedef {AhasendError | AhasendSuccess} AhasendResponse
  */
-type AhasendResponse = AhasendError | AhasendSuccess;
+type AhasendResponse = AhasendError | AhasendSuccess
 
 /**
  * Error response structure from Ahasend API
@@ -38,7 +38,7 @@ type AhasendResponse = AhasendError | AhasendSuccess;
  * @property {string} status - Error status message
  */
 export interface AhasendError {
-  status: string;
+  status: string
 }
 
 /**
@@ -50,10 +50,10 @@ export interface AhasendError {
  * @property {number} success_count - Number of successful deliveries
  */
 export interface AhasendSuccess {
-  errors: string[];
-  fail_count: number;
-  failed_recipients: string[];
-  success_count: number;
+  errors: string[]
+  fail_count: number
+  failed_recipients: string[]
+  success_count: number
 }
 
 /**
@@ -71,15 +71,15 @@ export interface AhasendSuccess {
  */
 interface AhasendEmail {
   content: {
-    attachments?: AhasendAttachment[];
-    headers?: Record<string, string>;
-    html_body?: string;
-    reply_to?: EmailRecipient;
-    subject: string;
-    text_body?: string;
-  };
-  from: EmailRecipient;
-  recipients: EmailRecipient[];
+    attachments?: AhasendAttachment[]
+    headers?: Record<string, string>
+    html_body?: string
+    reply_to?: EmailRecipient
+    subject: string
+    text_body?: string
+  }
+  from: EmailRecipient
+  recipients: EmailRecipient[]
 }
 
 /**
@@ -92,11 +92,11 @@ interface AhasendEmail {
  * @property {string} file_name - Name of the attachment file
  */
 interface AhasendAttachment {
-  base64: boolean;
-  content_id?: string;
-  content_type: string;
-  data: string;
-  file_name: string;
+  base64: boolean
+  content_id?: string
+  content_type: string
+  data: string
+  file_name: string
 }
 
 /**
@@ -112,23 +112,23 @@ class EmailParser {
    */
   static parseEmailString(emailStr: string): EmailRecipient {
     // Optimize the regex to be more precise and handle more cases
-    const match = emailStr.match(/^(?:([^<]+)<([^>]+)>|([^<\s]+))$/);
+    const match = emailStr.match(/^(?:([^<]+)<([^>]+)>|([^<\s]+))$/)
 
     if (match) {
-      const [, name, emailInBrackets, emailWithoutBrackets] = match;
-      
+      const [, name, emailInBrackets, emailWithoutBrackets] = match
+
       if (emailInBrackets) {
         return {
           name: name?.trim(),
-          email: emailInBrackets.trim()
-        };
+          email: emailInBrackets.trim(),
+        }
       }
-      
-      return { email: emailWithoutBrackets?.trim() || emailStr.trim() };
+
+      return { email: emailWithoutBrackets?.trim() || emailStr.trim() }
     }
 
     // Fallback to ensure we always return a valid structure
-    return { email: emailStr.trim() };
+    return { email: emailStr.trim() }
   }
 }
 
@@ -137,7 +137,7 @@ class EmailParser {
  * @class AhasendEmailBuilder
  */
 class AhasendEmailBuilder {
-  private email: AhasendEmail;
+  private email: AhasendEmail
 
   /**
    * Creates an instance of AhasendEmailBuilder
@@ -146,14 +146,14 @@ class AhasendEmailBuilder {
   constructor(config: AhasendAdapterConfig) {
     this.email = {
       content: {
-        subject: "",
+        subject: '',
       },
       from: {
         name: config.defaultFromName,
-        email: config.defaultFromAddress
+        email: config.defaultFromAddress,
       },
-      recipients: []
-    };
+      recipients: [],
+    }
   }
 
   /**
@@ -163,10 +163,10 @@ class AhasendEmailBuilder {
    */
   build(): AhasendEmail {
     if (!this.email.recipients.length) {
-      throw new APIError("Email must have at least one recipient", 400);
+      throw new APIError('Email must have at least one recipient', 400)
     }
 
-    return this.email;
+    return this.email
   }
 
   /**
@@ -175,43 +175,45 @@ class AhasendEmailBuilder {
    * @returns {this} - Returns this instance for method chaining
    * @throws {APIError} - If attachment is missing required properties
    */
-  setAttachments(attachments: SendEmailOptions["attachments"]): this {
+  setAttachments(attachments: SendEmailOptions['attachments']): this {
     if (!attachments?.length) {
-      return this;
+      return this
     }
 
-    this.email.content.attachments = attachments.map((attachment: SendEmailOptions["attachments"][number]) => {
-      if (!attachment.filename || !attachment.content) {
-        throw new APIError("Attachment is missing filename or content", 400);
-      }
-
-      let data: string;
-
-      // Optimize data handling with clearer logic
-      if (Buffer.isBuffer(attachment.content)) {
-        data = attachment.content.toString("base64");
-      } else if (typeof attachment.content === "string") {
-        // Check if it's already a base64 data URI
-        if (attachment.content.startsWith("data:")) {
-          const parts = attachment.content.split(",");
-          data = parts[1] || "";
-        } else {
-          // Convert string to base64
-          data = Buffer.from(attachment.content).toString("base64");
+    this.email.content.attachments = attachments.map(
+      (attachment: NonNullable<SendEmailOptions['attachments']>[number]) => {
+        if (!attachment.filename || !attachment.content) {
+          throw new APIError('Attachment is missing filename or content', 400)
         }
-      } else {
-        throw new APIError("Attachment content must be a string or Buffer", 400);
-      }
 
-      return {
-        base64: true,
-        content_type: attachment.contentType || "application/octet-stream",
-        data,
-        file_name: attachment.filename
-      };
-    });
+        let data: string
 
-    return this;
+        // Optimize data handling with clearer logic
+        if (Buffer.isBuffer(attachment.content)) {
+          data = attachment.content.toString('base64')
+        } else if (typeof attachment.content === 'string') {
+          // Check if it's already a base64 data URI
+          if (attachment.content.startsWith('data:')) {
+            const parts = attachment.content.split(',')
+            data = parts[1] || ''
+          } else {
+            // Convert string to base64
+            data = Buffer.from(attachment.content).toString('base64')
+          }
+        } else {
+          throw new APIError('Attachment content must be a string or Buffer', 400)
+        }
+
+        return {
+          base64: true,
+          content_type: attachment.contentType || 'application/octet-stream',
+          data,
+          file_name: attachment.filename,
+        }
+      },
+    )
+
+    return this
   }
 
   /**
@@ -220,18 +222,18 @@ class AhasendEmailBuilder {
    * @returns {this} - Returns this instance for method chaining
    */
   setContent(message: SendEmailOptions): this {
-    this.email.content.subject = message.subject || "";
-    
+    this.email.content.subject = message.subject || ''
+
     // Only set body properties if they exist
     if (message.html) {
-      this.email.content.html_body = String(message.html);
-    }
-    
-    if (message.text) {
-      this.email.content.text_body = String(message.text);
+      this.email.content.html_body = String(message.html)
     }
 
-    return this;
+    if (message.text) {
+      this.email.content.text_body = String(message.text)
+    }
+
+    return this
   }
 
   /**
@@ -241,25 +243,29 @@ class AhasendEmailBuilder {
    * @param {string} defaultFromName - Default sender name
    * @returns {this} - Returns this instance for method chaining
    */
-  setFrom(from: SendEmailOptions["from"], defaultFromAddress: string, defaultFromName: string): this {
+  setFrom(
+    from: SendEmailOptions['from'],
+    defaultFromAddress: string,
+    defaultFromName: string,
+  ): this {
     if (!from) {
-      return this;
+      return this
     }
 
-    if (typeof from === "string") {
-      const parsed = EmailParser.parseEmailString(from);
+    if (typeof from === 'string') {
+      const parsed = EmailParser.parseEmailString(from)
       this.email.from = {
         name: parsed.name || defaultFromName,
-        email: parsed.email || defaultFromAddress
-      };
+        email: parsed.email || defaultFromAddress,
+      }
     } else {
       this.email.from = {
         name: from.name || defaultFromName,
-        email: from.address || defaultFromAddress
-      };
+        email: from.address || defaultFromAddress,
+      }
     }
 
-    return this;
+    return this
   }
 
   /**
@@ -267,35 +273,35 @@ class AhasendEmailBuilder {
    * @param {SendEmailOptions["to"]} addresses - Recipient addresses
    * @returns {this} - Returns this instance for method chaining
    */
-  setRecipients(addresses: SendEmailOptions["to"]): this {
+  setRecipients(addresses: SendEmailOptions['to']): this {
     if (!addresses) {
-      return this;
+      return this
     }
 
-    const recipients: EmailRecipient[] = [];
+    const recipients: EmailRecipient[] = []
 
-    if (typeof addresses === "string") {
-      recipients.push(EmailParser.parseEmailString(addresses));
+    if (typeof addresses === 'string') {
+      recipients.push(EmailParser.parseEmailString(addresses))
     } else if (Array.isArray(addresses)) {
-      addresses.forEach(address => {
-        if (typeof address === "string") {
-          recipients.push(EmailParser.parseEmailString(address));
+      addresses.forEach((address) => {
+        if (typeof address === 'string') {
+          recipients.push(EmailParser.parseEmailString(address))
         } else if (address?.address) {
           recipients.push({
             name: address.name,
-            email: address.address
-          });
+            email: address.address,
+          })
         }
-      });
+      })
     } else if (addresses?.address) {
       recipients.push({
         name: addresses.name,
-        email: addresses.address
-      });
+        email: addresses.address,
+      })
     }
 
-    this.email.recipients = recipients;
-    return this;
+    this.email.recipients = recipients
+    return this
   }
 
   /**
@@ -303,31 +309,31 @@ class AhasendEmailBuilder {
    * @param {SendEmailOptions["replyTo"]} replyTo - Reply-to address
    * @returns {this} - Returns this instance for method chaining
    */
-  setReplyTo(replyTo: SendEmailOptions["replyTo"]): this {
+  setReplyTo(replyTo: SendEmailOptions['replyTo']): this {
     if (!replyTo) {
-      return this;
+      return this
     }
 
-    if (typeof replyTo === "string") {
-      this.email.content.reply_to = EmailParser.parseEmailString(replyTo);
+    if (typeof replyTo === 'string') {
+      this.email.content.reply_to = EmailParser.parseEmailString(replyTo)
     } else if (Array.isArray(replyTo) && replyTo.length > 0) {
-      const first = replyTo[0];
-      if (typeof first === "string") {
-        this.email.content.reply_to = EmailParser.parseEmailString(first);
+      const first = replyTo[0]
+      if (typeof first === 'string') {
+        this.email.content.reply_to = EmailParser.parseEmailString(first)
       } else if (first?.address) {
         this.email.content.reply_to = {
           name: first.name,
-          email: first.address
-        };
+          email: first.address,
+        }
       }
-    } else if (replyTo?.address) {
+    } else if (!Array.isArray(replyTo) && replyTo?.address) {
       this.email.content.reply_to = {
         name: replyTo.name,
-        email: replyTo.address
-      };
+        email: replyTo.address,
+      }
     }
 
-    return this;
+    return this
   }
 }
 
@@ -336,14 +342,14 @@ class AhasendEmailBuilder {
  * @class AhasendEmailService
  */
 class AhasendEmailService {
-  private apiKey: string;
+  private apiKey: string
 
   /**
    * Creates an instance of AhasendEmailService
    * @param {string} apiKey - API key for Ahasend service
    */
   constructor(apiKey: string) {
-    this.apiKey = apiKey;
+    this.apiKey = apiKey
   }
 
   /**
@@ -354,32 +360,32 @@ class AhasendEmailService {
    */
   async sendEmail(emailOptions: AhasendEmail): Promise<AhasendResponse> {
     try {
-      const response = await fetch("https://api.ahasend.com/v1/email/send", {
+      const response = await fetch('https://api.ahasend.com/v1/email/send', {
         body: JSON.stringify(emailOptions),
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "X-Api-Key": this.apiKey,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-Api-Key': this.apiKey,
         },
-        method: "POST",
-      });
+        method: 'POST',
+      })
 
       if (!response.ok) {
-        throw new APIError(`API request failed with status ${response.status}`, response.status);
+        throw new APIError(`API request failed with status ${response.status}`, response.status)
       }
 
-      const data = await response.json() as AhasendResponse;
+      const data = (await response.json()) as AhasendResponse
 
-      if ("success_count" in data) {
-        return data;
+      if ('success_count' in data) {
+        return data
       } else {
-        throw new APIError(data.status || "Unknown error", response.status);
+        throw new APIError(data.status || 'Unknown error', response.status)
       }
     } catch (error) {
       if (error instanceof APIError) {
-        throw error;
+        throw error
       }
-      throw new APIError(`Failed to send email: ${(error as Error).message}`, 500);
+      throw new APIError(`Failed to send email: ${(error as Error).message}`, 500)
     }
   }
 }
@@ -396,7 +402,7 @@ class AhasendEmailService {
  *   defaultFromAddress: 'noreply@example.com',
  *   defaultFromName: 'Example Company'
  * });
- * 
+ *
  * // Use in Payload config
  * export const config = {
  *   email: emailAdapter(),
@@ -404,11 +410,11 @@ class AhasendEmailService {
  * };
  */
 export const ahasendAdapter = (config: AhasendAdapterConfig): EmailAdapter<AhasendResponse> => {
-  const { apiKey, defaultFromAddress, defaultFromName } = config;
-  const emailService = new AhasendEmailService(apiKey);
+  const { apiKey, defaultFromAddress, defaultFromName } = config
+  const emailService = new AhasendEmailService(apiKey)
 
   return () => ({
-    name: "ahasend-rest",
+    name: 'ahasend-rest',
     defaultFromAddress,
     defaultFromName,
     sendEmail: async (message: SendEmailOptions) => {
@@ -418,16 +424,16 @@ export const ahasendAdapter = (config: AhasendAdapterConfig): EmailAdapter<Ahase
           .setRecipients(message.to)
           .setReplyTo(message.replyTo)
           .setContent(message)
-          .setAttachments(message.attachments);
+          .setAttachments(message.attachments)
 
-        const emailOptions = emailBuilder.build();
-        return await emailService.sendEmail(emailOptions);
+        const emailOptions = emailBuilder.build()
+        return await emailService.sendEmail(emailOptions)
       } catch (error) {
         if (error instanceof APIError) {
-          throw error;
+          throw error
         }
-        throw new APIError(`Failed to send email: ${(error as Error).message}`, 500);
+        throw new APIError(`Failed to send email: ${(error as Error).message}`, 500)
       }
     },
-  });
-};
+  })
+}
