@@ -376,10 +376,11 @@ class AhasendEmailService {
 
       const data = (await response.json()) as AhasendResponse
 
-      if ('success_count' in data) {
+      if ('success_count' in data && 'fail_count' in data && data.fail_count === 0) {
         return data
       } else {
-        throw new APIError(data.status || 'Unknown error', response.status)
+        const errorMessage = 'status' in data ? data.status : 'Unknown error'
+        throw new APIError(errorMessage, response.status)
       }
     } catch (error) {
       if (error instanceof APIError) {

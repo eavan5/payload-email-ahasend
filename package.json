@@ -1,6 +1,6 @@
 {
   "name": "payload-email-ahasend",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Payload Ahasend Email Adapter",
   "license": "MIT",
   "type": "module",
