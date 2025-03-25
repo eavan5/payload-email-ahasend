@@ -11,6 +11,14 @@ A custom email adapter for Payload CMS that integrates with the Ahasend email se
 - Reply-to functionality
 - Comprehensive error handling
 - TypeScript support
+- Compatible with Next.js 14+ and Payload CMS 3+
+
+## Requirements
+
+- Node.js 18.20.2 or Node.js 20.9.0+
+- Payload CMS 3.0.0+
+- Next.js 14.0.0+ (if using with Next.js)
+- React 18.2.0+
 
 ## Installation
 
@@ -76,6 +84,13 @@ The adapter provides detailed error information including:
 ## TypeScript Support
 
 The package includes full TypeScript definitions and interfaces for type safety.
+
+## Version Compatibility
+
+| Version | Payload CMS | Next.js | Notes |
+|---------|------------|---------|-------|
+| 1.0.5+  | 3.0.0+     | 14.0.0+ | Current version with expanded framework support |
+| 1.0.4   | 3.25.0     | Any     | Legacy version |
 
 ## License
 
