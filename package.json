@@ -1,6 +1,6 @@
 {
   "name": "payload-email-ahasend",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Payload Ahasend Email Adapter",
   "license": "MIT",
   "type": "module",
@@ -78,8 +78,8 @@
   "peerDependencies": {
     "next": "^14.0.0 || ^15.0.0",
     "payload": "^3.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
   },
   "engines": {
     "node": "^18.20.2 || >=20.9.0",
