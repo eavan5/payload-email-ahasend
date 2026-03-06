@@ -8,9 +8,13 @@ import { APIError } from 'payload'
  * @property {string} apiKey - API key for Ahasend service authentication
  * @property {string} defaultFromAddress - Default sender email address
  * @property {string} defaultFromName - Default sender name
+ * @property {'v1' | 'v2'} [apiVersion] - API version to use (default: 'v1')
+ * @property {string} [accountId] - Account ID for API v2 (required when apiVersion is 'v2')
  */
 export interface AhasendAdapterConfig {
+  accountId?: string
   apiKey: string
+  apiVersion?: 'v1' | 'v2'
   defaultFromAddress: string
   defaultFromName: string
 }
@@ -21,7 +25,7 @@ export interface AhasendAdapterConfig {
  * @property {string} email - Email address of the recipient
  * @property {string} [name] - Optional name of the recipient
  */
-interface EmailRecipient {
+export interface EmailRecipient {
   email: string
   name?: string
 }
@@ -69,7 +73,7 @@ export interface AhasendSuccess {
  * @property {EmailRecipient} from - Sender information
  * @property {EmailRecipient[]} recipients - List of recipients
  */
-interface AhasendEmail {
+export interface AhasendEmail {
   content: {
     attachments?: AhasendAttachment[]
     headers?: Record<string, string>
@@ -91,7 +95,7 @@ interface AhasendEmail {
  * @property {string} data - The attachment data (base64 encoded)
  * @property {string} file_name - Name of the attachment file
  */
-interface AhasendAttachment {
+export interface AhasendAttachment {
   base64: boolean
   content_id?: string
   content_type: string
@@ -103,7 +107,7 @@ interface AhasendAttachment {
  * Email Parser utility for handling various email formats
  * @class EmailParser
  */
-class EmailParser {
+export class EmailParser {
   /**
    * Parses an email string in format "Name <email@example.com>" or just "email@example.com"
    * @static
@@ -136,7 +140,7 @@ class EmailParser {
  * Email Builder using the builder pattern
  * @class AhasendEmailBuilder
  */
-class AhasendEmailBuilder {
+export class AhasendEmailBuilder {
   private email: AhasendEmail
 
   /**
@@ -338,18 +342,40 @@ class AhasendEmailBuilder {
 }
 
 /**
+ * Returns the API endpoint URL based on version
+ * @param {string} apiVersion - API version ('v1' or 'v2')
+ * @param {string} [accountId] - Account ID for v2
+ * @returns {string} - The API endpoint URL
+ */
+export function getApiEndpoint(apiVersion: 'v1' | 'v2', accountId?: string): string {
+  if (apiVersion === 'v2') {
+    if (!accountId) {
+      throw new APIError('accountId is required when using API v2', 400)
+    }
+    return `https://api.ahasend.com/v2/accounts/${accountId}/messages`
+  }
+  return 'https://api.ahasend.com/v1/email/send'
+}
+
+/**
  * Service class for sending emails via Ahasend API
  * @class AhasendEmailService
  */
-class AhasendEmailService {
+export class AhasendEmailService {
   private apiKey: string
+  private apiVersion: 'v1' | 'v2'
+  private accountId?: string
 
   /**
    * Creates an instance of AhasendEmailService
    * @param {string} apiKey - API key for Ahasend service
+   * @param {'v1' | 'v2'} [apiVersion='v1'] - API version to use
+   * @param {string} [accountId] - Account ID for v2
    */
-  constructor(apiKey: string) {
+  constructor(apiKey: string, apiVersion: 'v1' | 'v2' = 'v1', accountId?: string) {
     this.apiKey = apiKey
+    this.apiVersion = apiVersion
+    this.accountId = accountId
   }
 
   /**
@@ -360,7 +386,9 @@ class AhasendEmailService {
    */
   async sendEmail(emailOptions: AhasendEmail): Promise<AhasendResponse> {
     try {
-      const response = await fetch('https://api.ahasend.com/v1/email/send', {
+      const endpoint = getApiEndpoint(this.apiVersion, this.accountId)
+
+      const response = await fetch(endpoint, {
         body: JSON.stringify(emailOptions),
         headers: {
           Accept: 'application/json',
@@ -397,11 +425,20 @@ class AhasendEmailService {
  * @param {AhasendAdapterConfig} config - Configuration for the adapter
  * @returns {EmailAdapter<AhasendResponse>} - Configured email adapter
  * @example
- * // Create and configure the adapter
+ * // Create and configure the adapter (API v1 - default)
  * const emailAdapter = ahasendAdapter({
  *   apiKey: 'your-ahasend-api-key',
  *   defaultFromAddress: 'noreply@example.com',
  *   defaultFromName: 'Example Company'
+ * });
+ *
+ * // Create and configure the adapter (API v2)
+ * const emailAdapterV2 = ahasendAdapter({
+ *   apiKey: 'your-ahasend-api-key',
+ *   defaultFromAddress: 'noreply@example.com',
+ *   defaultFromName: 'Example Company',
+ *   apiVersion: 'v2',
+ *   accountId: 'your-account-id'
  * });
  *
  * // Use in Payload config
@@ -411,10 +448,16 @@ class AhasendEmailService {
  * };
  */
 export const ahasendAdapter = (config: AhasendAdapterConfig): EmailAdapter<AhasendResponse> => {
-  const { apiKey, defaultFromAddress, defaultFromName } = config
-  const emailService = new AhasendEmailService(apiKey)
+  const { apiKey, defaultFromAddress, defaultFromName, apiVersion = 'v1', accountId } = config
 
-  return () => ({
+  // Validate v2 config upfront
+  if (apiVersion === 'v2' && !accountId) {
+    throw new APIError('accountId is required when using AhaSend API v2', 400)
+  }
+
+  const emailService = new AhasendEmailService(apiKey, apiVersion, accountId)
+
+  return ({ payload: _payload }) => ({
     name: 'ahasend-rest',
     defaultFromAddress,
     defaultFromName,
